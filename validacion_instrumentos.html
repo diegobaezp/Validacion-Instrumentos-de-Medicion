@@ -503,7 +503,7 @@ con el ID de la empresa que brindó esas respuestas en esa fila.</p>
 observar a la izquierda el número de la fila; ese será el número que se
 reemplazará con el ID.</p>
 <pre class="r"><code>#install.packages(&quot;textshape&quot;)
-library(textshape)
+#library(textshape)
 capacidades_organizacionales&lt;-textshape::column_to_rownames(capacidades_organizacionales, loc = 1)</code></pre>
 </div>
 <div id="descriptivos-de-la-base-de-datos" class="section level3">
@@ -607,184 +607,477 @@ función summary(). En el ejemplo se utilizó el objeto summary_CapsModel
 para almacenar los resultados.</p>
 <pre class="r"><code>summary_CapsModel &lt;- summary(CapsModel)
 summary_CapsModel</code></pre>
-<p>A partir del resumen de resultados es posible conocer: a) la
+<p>A partir del resumen de resultados es posible conocer la
 relevancia/importancia/‘tasa de sustitución’ que tiene una variable
 sobre otra.</p>
 <p>En el ejemplo, se conoce la importancia de cada capacidad sobre la
 variable performance. El código es el siguiente:</p>
 <pre class="r"><code>summary_CapsModel$paths</code></pre>
-<p>##La siguiente línea evalúa la cantidad de iteraciones que el
-algoritmo tuvo que ejecutar para encontrar una solución. ##Este código
-permite encontrar una solución con muestras pequeñas y sin normalidad en
-la distribución. ##Si el algoritmo no converge a una solución, entonces
-debe revisar los datos pues tienen problemas. ##Por ejemplo, pueden
-tener poca variabilidad. summary_CapsModel$iterations</p>
-<p>##La siguiente línea muestra las cargas factoriales y es una prueba
-de validez del instrumento. ##Los indicadores de cada dimensión deben
-cargar con mayor valor en su dimensión summary_CapsModel<span class="math inline">\(loadings ##La siguiente línea le permite guardar
-la tabla de resultado como un archivo de excel. ##Reemplace la URL de la
-carpeta donde la quiere guardar y coloque un nombre al archivo.
-write.xlsx(x=summary_CapsModel\)</span>loadings, file=“SU
-URL/NOMBREARCHIVO.xlsx”, colNames = TRUE, borders = “surrounding”,
-overwrite = TRUE, rowNames=TRUE)</p>
-<p>##La siguiente línea debe mostrar valores en las cargas mayor a 0,5
-para que la pregunta sea valida. summary_CapsModel<span class="math inline">\(loadings^2 ##La siguiente línea le permite guardar
-la tabla de resultado como un archivo de excel. ##Reemplace la URL de la
-carpeta donde la quiere guardar y coloque un nombre al archivo.
-write.xlsx(x=summary_CapsModel\)</span>loadings, file=“SU
-URL/NOMBREARCHIVO.xlsx”, colNames = TRUE, borders = “surrounding”,
-overwrite = TRUE, rowNames=TRUE)</p>
-<p>##La siguiente línea muestra 4 pruebas de confiabilidad del
-instrumento. ##Tenga en cuenta que se calcula e interpreta la
-confiablidad por dimensión, no por todo el instrumento; ##a menos que el
-instrumento mida una sóla dimensión. ##Alpha, rhoC, and rhoA debería ser
-superior a 0,7 mientras que AVE debería ser mayor a 0.5
-summary_CapsModel<span class="math inline">\(reliability ##La siguiente
-línea le permite guardar la tabla de resultado como un archivo de excel.
-##Reemplace la URL de la carpeta donde la quiere guardar y coloque un
-nombre al archivo. write.xlsx(x=summary_CapsModel\)</span>loadings,
-file=“SU URL/NOMBREARCHIVO.xlsx”, colNames = TRUE, borders =
-“surrounding”, overwrite = TRUE, rowNames=TRUE)</p>
-<p>##La siguiente línea muestra un gráfico de comparación entre las
-medidas de confiabilidad. plot(summary_CapsModel$reliability)</p>
+<p>El algoritmo actual realiza un proceso de iteración para encontrar la
+solución óptima. Este en particular trata muestras pequeñas de datos y
+tampoco asume normalidad en la distribución de los datos. Entonces, se
+esperaría que exista convergencia del algoritmo.</p>
+<p>Sin embargo, en caso que el algoritmo no logre convergencia, se
+deberá revisar los datos pues tienen problemas; por ejemplo, pueden
+tener poca variabilidad.</p>
+<p>Para el ejemplo, se utiliza este código para saber el número de
+iteraciones que requirió el algoritmo:</p>
+<pre class="r"><code>summary_CapsModel$iterations</code></pre>
+<p>Para los instrumentos que tienen medidas reflectivas, es importante
+saber si los indicadores/preguntas están asociadas a la
+dimensión/variable que se pretende medir.</p>
+<p>Un algoritmo que permite hacer eso es el análisis factorial
+confirmatorio. Mediante PLS también es posible ejecutarlo cuando no se
+cumple normalidad en la distribución. El resultado, es decir, las cargas
+factoriales más altas deben estar asociadas a la variable/dimensión al
+que pertenecen. Para este algoritmo, el valor debería ser mayor a 0,708
+para señalar que ese indicador pertenece a la dimensión/variable.</p>
+<p>Para nuestro ejemplo, las cargas factoriales se encuentran con el
+siguiente código. Además, se utiliza una función que permite guardar ese
+resultado como un archivo de excel. Para eso debe reemplazar la URL por
+aquella donde quiere guardar el archivo, y coloque un nombre al
+mismo.</p>
+<pre class="r"><code>summary_CapsModel$loadings
+
+#write.xlsx(x=summary_CapsModel$loadings, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)</code></pre>
+<p>A partir de las cargas obtenidas previamente es posible obtener la
+varianza explicada de cada indicador. Esta se consigue elevando al
+cuadrado el valor de la carga.</p>
+<p>Se esperaría que ese valor de varianza sea mayor a 0,5. Caso
+contrario, se debe considerar eliminar el indicador. Además, si la carga
+factorial (no el cuadrado) es menor a 0,4, entonces debe suprimirse ese
+indicador/pregunta.</p>
+<p>El eliminar la pregunta debe conducir a un incremento en la
+confiabilidad interna o validez convergente.</p>
+<p>Para el ejemplo, se obtiene la varianza usando las cargas aplicando
+este código y se guarda en excel; reemplazando URL y nombre:</p>
+<pre class="r"><code>summary_CapsModel$loadings^2
+
+#write.xlsx(x=summary_CapsModel$loadings, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)</code></pre>
+<p>De los mismos resultados del modelo se puede obtener las pruebas de
+confiabilidad del instrumento. Tenga en cuenta que se calcula e
+interpreta la confiablidad por dimensión, no por todo el instrumento. Es
+decir, si su instrumento mide 1 variable que tiene 3 dimensiones,
+entonces debe obtener 3 resultados, pues es una medida de la
+confiabilidad interna (de la dimensión); no se mezcla una dimensión con
+otra.</p>
+<p>Varias pruebas pueden aplicarse. Alpha de Cronbach es la más común,
+pero en PLS-SEM es posible obtener otras como la confiabilidad compuesta
+rho_c o el coeficiente de confiabilidad rho_a.</p>
+<p>Aunque algunos autores sugieren 0,6 como el umbral para aceptar
+confiabilidad (en especial para Cronbach), es recomendable que el valor
+de los indicadores sea superior a 0,7. Tenga en cuenta que Alpha de
+Cronbach es una medida conservadora, mientras que rho_c es más liberal;
+así pues rho_a es un intermedio entre esas dos pruebas.</p>
+<p>Nota: si estas pruebas son mayores a 0,95 debe entonces revisar, pues
+sugiere un patron de respuesta no deseable.</p>
+<p>Para el ejemplo en análisis, se obtiene los test de confiabilidad y
+se guardan los resultados en excel (reemplazando url y nombre) mediante
+este código:</p>
+<pre class="r"><code>summary_CapsModel$reliability
+
+#write.xlsx(x=summary_CapsModel$loadings, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)</code></pre>
+<p>Para la generación de informes, es posible hacer una comparación de
+las pruebas de confiabilidad mediante un gráfico, inclusive agregando un
+línea en el umbral de aceptación.</p>
+<p>El código a usar es el siguiente para los datos de ejemplo:</p>
+<pre class="r"><code>plot(summary_CapsModel$reliability)</code></pre>
+<p>En cuanto a la validez, los resultados muestran las pruebas tanto
+para la convergente como para la discriminante.</p>
+<p>La validez convergente evalúa qué tanto la dimensión/constructo
+converge o permite explicar la varianza de sus indicadores.</p>
+<p>En los resultados de código anterior aparece la prueba AVE, que es la
+varianza media extraida, o el equivalente a la comunalidad del
+constructo. Este test debe puntuar por encima de 0,5 indicando que el
+constructo explica el 50% (cuando es 0,5) de la varianza de los
+indicadores que forman el constructo. Por esta razón debe ser igual o
+mayor a 0,5. (Revisar los resultados usando el código anterior).</p>
+<p>Por otra parte, la validez discriminante evalúa qué tanto un
+constructo/dimensión es empíricamente diferente de los otros
+constructos/dimensiones que forman a la variable.</p>
+<p>Para esta medida existen varias pruebas. Una de ellas es el criterio
+Fornell and Larcker que compara la varianza dentro el constructo con la
+varianza entre constructos (con los demás constructos). Sin embargo esta
+prueba debe tomarse con precaución, pues algunos estudios han demostrado
+que no es adecuada, inclusive para cargas factoriales cercanas.</p>
+<p>Otra prueba es el ratio heterotrait-monotrait (HTMT) que compara las
+correlaciones de los indicadores entre todos los constructos, con las
+correlaciones de los indicadores del mismo constructo.</p>
+<p>HTMT es una mejor medida para la validez discriminante, que está
+presente cuando HTMT es menor a 0,9 para constructos/dimensiones
+conceptualmente similares; pero cuando se tiene constructos/dimensiones
+conceptualmente diferentes, entonces HTMT deberá ser menor a 0,85.</p>
+<p>En el ejemplo que se está utilizando, el código para obtener las
+pruebas de validez divergente es el siguiente:</p>
+<pre class="r"><code>summary_CapsModel$validity$fl_criteria
+
+summary_CapsModel$validity$htmt</code></pre>
+<p>Para evaluar si la medida HTMT es significativamente diferente de 1,0
+o un valor de umbral más bajo, o a 0,9 o 0,85 según sea el caso, se
+puede utilizar intervalos de confianza mediante bootstraping.</p>
+<p>Se sugiere que para tal procedimiento se aplique 10.000 muestras de
+bootstraping.</p>
+<p>Los resultados de bootstraping muestra el intervalo a un 90% o 95% de
+confianza. Por tanto, se debe revisar el limite superior y asegurar que
+se encuentre por debajo del nivel umbral de HTMT seleccionado.</p>
+<p>Para el ejemplo que se está tratando, se tomará un intervalo al 90%
+(alpha = 0,10) y se almacena el resultado en el objeto boot_CapsModel,
+para después obtener el resumen bajo el objeto sum_boot_CapsModel. Usted
+realizará las adecuaciones para su trabajo. El código es el
+siguiente:</p>
+<pre class="r"><code>boot_CapsModel &lt;- bootstrap_model(seminr_model = CapsModel,
+                                  nboot = 10000)
+sum_boot_CapsModel &lt;- summary(boot_CapsModel, alpha = 0.10)
+sum_boot_CapsModel
+
+sum_boot_CapsModel$bootstrapped_HTMT</code></pre>
+<p>Después de revisar los elementos anteriores, y asegurarse que cumple
+con los test realizados, entonces se puede obtener un diagrama del
+modelo estructural. Allí con asterísco se especifican las relaciones con
+significancia estadística.</p>
+<p>Para el ejemplo se realiza con este código:</p>
+<pre class="r"><code>plot(boot_CapsModel, theme = seminr_theme_create)</code></pre>
 </div>
-<div id="section" class="section level2">
-<h2></h2>
-<p>summary_CapsModel<span class="math inline">\(validity\)</span>fl_criteria</p>
-<p>summary_CapsModel<span class="math inline">\(validity\)</span>htmt
-boot_CapsModel &lt;- bootstrap_model(seminr_model = CapsModel, nboot =
-10000) sum_boot_CapsModel &lt;- summary(boot_CapsModel, alpha = 0.10)
-sum_boot_CapsModel</p>
-<p>sum_boot_CapsModel$bootstrapped_HTMT</p>
-<p>summary_CapsModel<span class="math inline">\(validity\)</span>cross_loadings</p>
-<p>plot(boot_CapsModel, theme = seminr_theme_create)</p>
-<p>#&gt; 2.3) MODELO FORMATIVO #&lt;</p>
-<p>MeasureModel_Form &lt;- constructs( composite(“Cap_marketing”,
-multi_items(item_name = “CM”, item_numbers = 1:6), weights = mode_B),
-composite(“Cap_enlace”, multi_items(item_name = “CE”, item_numbers =
-1:6), weights = mode_B), composite(“Cap_tecnologica”,
-multi_items(item_name = “CT”, item_numbers = 1:6), weights = mode_B),
-composite(“Cap_tics”, multi_items(item_name = “CI”, item_numbers = 1:6),
-weights = mode_B), composite(“Cap_gestion”, multi_items(item_name =
-“CG”, item_numbers = 1:8), weights = mode_B),
-composite(“Cap_innovacion”, multi_items(item_name = “CN”, item_numbers =
-1:7), weights = mode_B), composite(“Performance”,
-single_item(“Performance”)) )</p>
-<p>StructureModel_Form &lt;- relationships( paths(from =
-c(“Cap_marketing”, “Cap_enlace”, “Cap_tecnologica”, “Cap_tics”,
-“Cap_gestion”, “Cap_innovacion”), to = c(“Performance”)) )</p>
-<p>CapsModel_Form &lt;- estimate_pls(data =capacidades_organizacionales,
-measurement_model = MeasureModel_Form, structural_model =
-StructureModel_Form, inner_weights = path_weighting, missing =
-mean_replacement, missing_value = “-99”)</p>
-<p>summary_CapsModel_Form &lt;- summary(CapsModel_Form)
-summary_CapsModel_Form summary_CapsModel_Form<span class="math inline">\(paths
-summary_CapsModel_Form\)</span>iterations</p>
-<p>summary_CapsModel_Form<span class="math inline">\(loadings
-summary_CapsModel\)</span>loadings^2 summary_CapsModel<span class="math inline">\(reliability
-plot(summary_CapsModel\)</span>reliability) summary_CapsModel<span class="math inline">\(validity\)</span>fl_criteria
-summary_CapsModel<span class="math inline">\(validity\)</span>htmt</p>
-<p>boot_CapsModel_Form &lt;- bootstrap_model(seminr_model =
-CapsModel_Form, nboot = 10000) sum_boot_CapsModel_Form &lt;-
-summary(boot_CapsModel_Form, alpha = 0.10) sum_boot_CapsModel_Form</p>
-<p>sum_boot_CapsModel$bootstrapped_HTMT</p>
-<p>summary_CapsModel<span class="math inline">\(validity\)</span>cross_loadings</p>
-<p>plot(boot_CapsModel, theme = seminr_theme_create)</p>
-<p>##Análisis de redundancia # CM<br />
-CM_redundancy_mm &lt;- constructs( composite(“Cap_marketing_form”,
-multi_items(item_name = “CM”, item_numbers = 1:6), weights = mode_B),
-composite(“Cap_marketing_glob”, single_item(“CM_G”)) )</p>
-<p>CM_redundancy_sm &lt;- relationships( paths(from =
-c(“Cap_marketing_form”), to = c(“Cap_marketing_glob”)) )</p>
-<p>CM_redundancy_plsmodel &lt;- estimate_pls(data =
-capacidades_organizacionales, measurement_model = CM_redundancy_mm,
-structural_model = CM_redundancy_sm, missing = mean_replacement,
-missing_value = “-99”)</p>
-<p>sum_CM_redundancy_model &lt;- summary(CM_redundancy_plsmodel)
-sum_CM_redundancy_model</p>
-<p>sum_CM_redundancy_model<span class="math inline">\(reliability
-sum_CM_redundancy_model\)</span>paths</p>
+<div id="validación-del-instrumento-cuando-es-formativo" class="section level3">
+<h3>3) VALIDACIÓN DEL INSTRUMENTO CUANDO ES FORMATIVO</h3>
+<p>Ahora bien, puede darse el caso que el instrumento no sea reflectivo
+sino formativo, es decir que los indicadores forman a la
+dimensión/constructo, como si formaran un índice. Entonces, los
+indicadores son la causa y la dimensión/constructo es la consecuencia.
+En el modelo gráfico se denota con una flecha que inicia en el indicador
+y termina en la dimensión/constructo.</p>
+<p>Por ejemplo, “la clase social es [una variable] compuesta de
+indicadores como el nivel educativo, el prestigio ocupacional, y el
+ingreso.” (Fawad, 2023). Nótese que en este ejemplo, los tres
+indicadores son inductores o causas que dan una medida &lt;<forman>&gt;
+al constructo clase social que tiene el individuo. Si la persona tiene
+un determinado nivel educativo (indicador), entonces puntua en mayor o
+menor nivel de clase social (constructo), o si la persona tiene
+determinado prestigio laboral (indicador), eso afecta el nivel de clase
+social (constructo), y lo mismo pasa con el indicador ingreso.</p>
 </div>
-<div id="ce" class="section level1">
-<h1>CE</h1>
-<p>CE_redundancy_mm &lt;- constructs( composite(“Cap_enlace_form”,
-multi_items(item_name = “CE”, item_numbers = 1:6), weights = mode_B),
-composite(“Cap_enlace_glob”, single_item(“CE_G”)) )</p>
-<p>CE_redundancy_sm &lt;- relationships( paths(from =
-c(“Cap_enlace_form”), to = c(“Cap_enlace_glob”)) )</p>
-<p>CE_redundancy_plsmodel &lt;- estimate_pls(data =
-capacidades_organizacionales, measurement_model = CE_redundancy_mm,
-structural_model = CE_redundancy_sm, missing = mean_replacement,
-missing_value = “-99”)</p>
-<p>sum_CE_redundancy_model &lt;- summary(CE_redundancy_plsmodel)
-sum_CE_redundancy_model</p>
-<p>sum_CE_redundancy_model<span class="math inline">\(reliability
-sum_CE_redundancy_model\)</span>paths</p>
+<div id="construir-y-estimar-el-modelo-1" class="section level3">
+<h3>3.1) CONSTRUIR Y ESTIMAR EL MODELO</h3>
+<p>Bajo esta situación, hacer la validación implica otro tipo de medidas
+pero requiere también un modelo de medida y un modelo estructural.</p>
+<p>El siguiente bloque de código construye esos dos modelos para los
+datos de ejemplo que se vienen trabajando. La diferente en el código se
+encuentra en el tipo de pesos que se deben especificar para el modelo de
+medida. Mientras en los modelos reflectivos el parámetro weights =
+mode_A (valor que ya viene por defecto y por eso no se colocó), para el
+caso formativo se debe usar mode_B.</p>
+<p>Recordar que en la base de datos de ejemplo se tienen siete
+variables: Cap_marketing, Cap_enlace, Cap_tecnologica, Cap_tics,
+Cap_gestion, Cap_innovacion, Performance. El modelo de medida se
+guardará en un objeto, en este caso es MeasureModel_Form, mientras que
+el modelo estructural se aloja en el objeto StructureModel_Form. El
+código es el siguiente:</p>
+<pre class="r"><code>MeasureModel_Form &lt;- constructs(
+  composite(&quot;Cap_marketing&quot;,   multi_items(item_name = &quot;CM&quot;, item_numbers = 1:6),
+            weights = mode_B),
+  composite(&quot;Cap_enlace&quot;,      multi_items(item_name = &quot;CE&quot;, item_numbers = 1:6), weights = mode_B),
+  composite(&quot;Cap_tecnologica&quot;, multi_items(item_name = &quot;CT&quot;, item_numbers = 1:6), weights = mode_B),
+  composite(&quot;Cap_tics&quot;,        multi_items(item_name = &quot;CI&quot;, item_numbers = 1:6), weights = mode_B),
+  composite(&quot;Cap_gestion&quot;,     multi_items(item_name = &quot;CG&quot;, item_numbers = 1:8), weights = mode_B),
+  composite(&quot;Cap_innovacion&quot;,  multi_items(item_name = &quot;CN&quot;, item_numbers = 1:7), weights = mode_B),
+  composite(&quot;Performance&quot;,     single_item(&quot;Performance&quot;))
+)
+
+StructureModel_Form &lt;- relationships(
+  paths(from = c(&quot;Cap_marketing&quot;, &quot;Cap_enlace&quot;, &quot;Cap_tecnologica&quot;, &quot;Cap_tics&quot;, &quot;Cap_gestion&quot;, &quot;Cap_innovacion&quot;),
+        to = c(&quot;Performance&quot;))
+)</code></pre>
+<p>Recuerde que en el modelo estructural, las flechas muestran la
+relación “Causa-Efecto” entre las variables/constructos, es decir, la
+influencia que tiene una sobre otra u otras.</p>
+<p>Ahora bien, a partir del modelo de medida y el modelo estructural, es
+posible hacer la estimación. Aquí se almacena en el objeto
+CapsModel_Form usando el siguiente código:</p>
+<pre class="r"><code>CapsModel_Form &lt;- estimate_pls(data =capacidades_organizacionales,
+                               measurement_model = MeasureModel_Form,
+                               structural_model = StructureModel_Form,
+                               inner_weights = path_weighting,
+                               missing = mean_replacement,
+                               missing_value = &quot;-99&quot;)</code></pre>
 </div>
-<div id="ct" class="section level1">
-<h1>CT</h1>
-<p>CT_redundancy_mm &lt;- constructs( composite(“Cap_tecnologica_form”,
-multi_items(item_name = “CT”, item_numbers = 1:6), weights = mode_B),
-composite(“Cap_tecnologica_glob”, single_item(“CT_G”)) )</p>
-<p>CT_redundancy_sm &lt;- relationships( paths(from =
-c(“Cap_tecnologica_form”), to = c(“Cap_tecnologica_glob”)) )</p>
-<p>CT_redundancy_plsmodel &lt;- estimate_pls(data =
-capacidades_organizacionales, measurement_model = CT_redundancy_mm,
-structural_model = CT_redundancy_sm, missing = mean_replacement,
-missing_value = “-99”)</p>
-<p>sum_CT_redundancy_model &lt;- summary(CT_redundancy_plsmodel)
-sum_CT_redundancy_model</p>
-<p>sum_CT_redundancy_model<span class="math inline">\(reliability
-sum_CT_redundancy_model\)</span>paths</p>
+<div id="obtener-resumen-de-las-pruebas-1" class="section level3">
+<h3>2.2) OBTENER RESUMEN DE LAS PRUEBAS</h3>
+<p>Para obtener las medidas de resumen del modelo estimado se utiliza la
+función summary(). En el ejemplo se utilizó el objeto summary_CapsModel
+para almacenar los resultados.</p>
+<pre class="r"><code>summary_CapsModel_Form &lt;- summary(CapsModel_Form)
+summary_CapsModel_Form</code></pre>
+<p>A partir del resumen de resultados se debe establecer la validez
+convergente, la posible colinealidad entre indicadores, y la
+significancia de estos.</p>
+<p>De allí se puede obtener la cantidad de iteraciones utilizadas.
+Recordar que si el algoritmo no logra convergencia, entonces pueden
+existir problemas con los datos.</p>
+<p>Para el ejemplo el código será:</p>
+<pre class="r"><code>summary_CapsModel_Form$iterations</code></pre>
+<p>Ahora bien, para evaluar la significancia de los pesos de los
+indicadores se utiliza un proceso de bootstraping. De esa estimación se
+debe solicitar el resumen de medidas. El intervalo de confianza que se
+genera para los pesos de indicador no deberán incluir el cero para que
+sean estadísticamente significativos.</p>
+<p>En el ejemplo se asignó al objeto boot_CapsModel_Form. Además, se
+incluye una función para graficar el modelo. El código para estimar y
+resumir es el siguiente:</p>
+<pre class="r"><code>boot_CapsModel_Form &lt;- bootstrap_model(seminr_model = CapsModel_Form,
+                                       nboot = 10000)
+sum_boot_CapsModel_Form &lt;- summary(boot_CapsModel_Form, alpha = 0.10)
+sum_boot_CapsModel_Form
+
+plot(boot_CapsModel, theme = seminr_theme_create)</code></pre>
+<p>####Análisis de redundancia Entonces, para evaluar la validez
+convergente se debe llevar a cabo un análisis de redundancia que se
+aplicará en forma independiente para cada dimensión/constructo.</p>
+<p>El modelo para el constructo incluirá la medida de los indicadores y
+la medida global del constructo. Por ejemplo, esto puede ser una
+pregunta general que se realiza al encuestado sobre una medida general
+que pueda dar sobre la presencia del constructo.</p>
+<p>Si su diseño de investigación tiene medidas formativas, entonces debe
+considerar incluir en la encuesta esa medida global.</p>
+<p>Así pues, se construye un modelo estructural entre la medida
+formativa de la dimensión/constructo, con su medida global. Evaluando si
+existe relación entre ellos (algo que se esperaría) o tal vez no
+existe.</p>
+<p>Para el ejemplo se realiza el análisis de redundancia para cada una
+de las dimensiones/construtos evaluados. Como son seis dimensiones, se
+debe aplicar seis análisis de redundancia.</p>
+<p>Para cada dimensión/constructo se especifica el modelo de medida,
+este incluye los indicadores formativos a la dimensión/constructo, y el
+modelo estructural que incluye la relación entre la dimensión/constructo
+y su medida global.</p>
+<p>El código para cada una de las dimensiones es el siguiente,
+almacenando en diferentes objetos, y además almacenando los resultados
+del modelo:</p>
+<pre class="r"><code>##Para la dimensión Cap_marketing
+CM_redundancy_mm &lt;- constructs(
+  composite(&quot;Cap_marketing_form&quot;, multi_items(item_name = &quot;CM&quot;, item_numbers = 1:6), weights = mode_B),
+  composite(&quot;Cap_marketing_glob&quot;, single_item(&quot;CM_G&quot;))
+)
+
+CM_redundancy_sm &lt;- relationships(
+  paths(from = c(&quot;Cap_marketing_form&quot;), to = c(&quot;Cap_marketing_glob&quot;))
+)
+
+CM_redundancy_plsmodel &lt;- estimate_pls(data = capacidades_organizacionales,
+                                       measurement_model = CM_redundancy_mm,
+                                       structural_model = CM_redundancy_sm,
+                                       missing = mean_replacement,
+                                       missing_value = &quot;-99&quot;)
+
+##Almacenar resultados del modelo
+sum_CM_redundancy_model &lt;- summary(CM_redundancy_plsmodel)
+sum_CM_redundancy_model
+
+
+
+##Para la dimensión Cap_enlace 
+CE_redundancy_mm &lt;- constructs(
+  composite(&quot;Cap_enlace_form&quot;, multi_items(item_name = &quot;CE&quot;, item_numbers = 1:6), weights = mode_B),
+  composite(&quot;Cap_enlace_glob&quot;, single_item(&quot;CE_G&quot;))
+)
+
+CE_redundancy_sm &lt;- relationships(
+  paths(from = c(&quot;Cap_enlace_form&quot;), to = c(&quot;Cap_enlace_glob&quot;))
+)
+
+CE_redundancy_plsmodel &lt;- estimate_pls(data = capacidades_organizacionales,
+                                       measurement_model = CE_redundancy_mm,
+                                       structural_model = CE_redundancy_sm,
+                                       missing = mean_replacement,
+                                       missing_value = &quot;-99&quot;)
+
+##Almacenar resultados del modelo
+sum_CE_redundancy_model &lt;- summary(CE_redundancy_plsmodel)
+sum_CE_redundancy_model
+
+
+
+##Para la dimensión Cap_tecnologica
+CT_redundancy_mm &lt;- constructs(
+  composite(&quot;Cap_tecnologica_form&quot;, multi_items(item_name = &quot;CT&quot;, item_numbers = 1:6), weights = mode_B),
+  composite(&quot;Cap_tecnologica_glob&quot;, single_item(&quot;CT_G&quot;))
+)
+
+CT_redundancy_sm &lt;- relationships(
+  paths(from = c(&quot;Cap_tecnologica_form&quot;), to = c(&quot;Cap_tecnologica_glob&quot;))
+)
+
+CT_redundancy_plsmodel &lt;- estimate_pls(data = capacidades_organizacionales,
+                                       measurement_model = CT_redundancy_mm,
+                                       structural_model = CT_redundancy_sm,
+                                       missing = mean_replacement,
+                                       missing_value = &quot;-99&quot;)
+
+##Almacenar resultados del modelo
+sum_CT_redundancy_model &lt;- summary(CT_redundancy_plsmodel)
+sum_CT_redundancy_model
+
+
+
+##Para la dimensión Cap_tics
+CI_redundancy_mm &lt;- constructs(
+  composite(&quot;Cap_tics_form&quot;, multi_items(item_name = &quot;CI&quot;, item_numbers = 1:6), weights = mode_B),
+  composite(&quot;Cap_tics_glob&quot;, single_item(&quot;CI_G&quot;))
+)
+
+CI_redundancy_sm &lt;- relationships(
+  paths(from = c(&quot;Cap_tics_form&quot;), to = c(&quot;Cap_tics_glob&quot;))
+)
+
+CI_redundancy_plsmodel &lt;- estimate_pls(data = capacidades_organizacionales,
+                                       measurement_model = CI_redundancy_mm,
+                                       structural_model = CI_redundancy_sm,
+                                       missing = mean_replacement,
+                                       missing_value = &quot;-99&quot;)
+
+##Almacenar resultados del modelo
+sum_CI_redundancy_model &lt;- summary(CI_redundancy_plsmodel)
+sum_CI_redundancy_model
+
+
+
+##Para la dimensión Cap_gestion
+CG_redundancy_mm &lt;- constructs(
+  composite(&quot;Cap_gestion_form&quot;, multi_items(item_name = &quot;CG&quot;, item_numbers = 1:8), weights = mode_B),
+  composite(&quot;Cap_gestion_glob&quot;, single_item(&quot;CG_G&quot;))
+)
+
+CG_redundancy_sm &lt;- relationships(
+  paths(from = c(&quot;Cap_gestion_form&quot;), to = c(&quot;Cap_gestion_glob&quot;))
+)
+
+CG_redundancy_plsmodel &lt;- estimate_pls(data = capacidades_organizacionales,
+                                       measurement_model = CG_redundancy_mm,
+                                       structural_model = CG_redundancy_sm,
+                                       missing = mean_replacement,
+                                       missing_value = &quot;-99&quot;)
+
+##Almacenar resultados del modelo
+sum_CG_redundancy_model &lt;- summary(CG_redundancy_plsmodel)
+sum_CG_redundancy_model
+
+
+
+##Para la dimesión Cap_innovación
+CN_redundancy_mm &lt;- constructs(
+  composite(&quot;Cap_innovacion_form&quot;, multi_items(item_name = &quot;CN&quot;, item_numbers = 1:7), weights = mode_B),
+  composite(&quot;Cap_innovacion_glob&quot;, single_item(&quot;CN_G&quot;))
+)
+
+CN_redundancy_sm &lt;- relationships(
+  paths(from = c(&quot;Cap_innovacion_form&quot;), to = c(&quot;Cap_innovacion_glob&quot;))
+)
+
+CN_redundancy_plsmodel &lt;- estimate_pls(data = capacidades_organizacionales,
+                                       measurement_model = CN_redundancy_mm,
+                                       structural_model = CN_redundancy_sm,
+                                       missing = mean_replacement,
+                                       missing_value = &quot;-99&quot;)
+
+##Almacenar resultados del modelo
+sum_CN_redundancy_model &lt;- summary(CN_redundancy_plsmodel)
+sum_CN_redundancy_model</code></pre>
+<p>A partir de los resultados obtenidos con los modelos estimados para
+cada una de las dimensiones/constructos, se puede verificar la validez
+convergente con el análisis de redundancia al solicitar los valores de
+los coeficientes de relación (path coefficients), los cuales deben ser
+igual o mayor a 0,708.</p>
+<p>Para el ejemplo se utiliza el siguiente código para mostrar los
+coeficientes y para guardar el resultado en excel; se muestra para cada
+dimensión:</p>
+<pre class="r"><code>sum_CM_redundancy_model$paths
+#write.xlsx(x=sum_CM_redundancy_model$paths, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)
+
+sum_CE_redundancy_model$paths
+#write.xlsx(x=sum_CE_redundancy_model$paths, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)
+
+sum_CT_redundancy_model$paths
+#write.xlsx(x=sum_CT_redundancy_model$paths, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)
+
+sum_CI_redundancy_model$paths
+#write.xlsx(x=sum_CI_redundancy_model$paths, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)
+
+sum_CG_redundancy_model$paths
+#write.xlsx(x=sum_CG_redundancy_model$paths, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)
+
+sum_CN_redundancy_model$paths
+#write.xlsx(x=sum_CN_redundancy_model$paths, file=&quot;SU URL/NOMBREARCHIVO.xlsx&quot;, colNames = TRUE, borders = &quot;surrounding&quot;, overwrite = TRUE, rowNames=TRUE)</code></pre>
+<p>El siguiente paso es verificar si el modelo medido tiene problemas de
+colinealidad, es decir, que los indicadores de una misma
+dimensión/constructo se correlacionan entre ellos. Este se hace como el
+modelo completo, el que incluye todas las dimensiones/variables.</p>
+<p>Si bien existen diferentes reglas para detectar colinealidad, una
+medida común es el factor inflacionario de varianza (VIF). Este valor
+debería estár por debajo de 3, como un valor conservador de
+colinealidad.</p>
+<p>Si algún indicador muestra valores mayores, entonces se convierte en
+candidato para retirar del modelo.</p>
+<p>En ejemplo que se está analizando se requiere el análisis VIF usando
+la siguiente línea de código:</p>
+<pre class="r"><code>summary_CapsModel_Form$validity$vif_items</code></pre>
+<p>Posterior, se debe evaluar el coeficiente de cada indicador,
+analizando su significancia estadística y su relevancia.</p>
+<p>Para esto se recurre al bootstraping. Esta función se correrá con
+10000 muestras. En los resultados se debe verificar que el indicador
+formativo no contenga el cero dentro del intervalo de confianza. Su
+límite inferior y superior aparecerán en las dos últimas columnas.</p>
+<p>Recordar que aquí sólo interesa el modelo de medida, no el modelo
+estructural, es decir que sólo se revisarán los coeficientes de los
+indicadores que son formativos.</p>
+<p>En cuanto al ejemplo que se viene trabajando, la estimación con
+bootstraping se almacena en el objeto boot_CapsModel_Form. Los
+resultados se guardaron en el objeto summary_boot_CapsModel_Form. Se
+pidió que mostrara los coeficientes con confianza al 95%. El código es
+el siguiente:</p>
+<pre class="r"><code>boot_CapsModel_Form &lt;- bootstrap_model(seminr_model = CapsModel_Form,
+                                       nboot = 10000,
+                                       cores = parallel::detectCores(),
+                                       seed = 123)
+
+summary_boot_CapsModel_Form &lt;- summary(boot_CapsModel_Form, alpha = 0.05)
+summary_boot_CapsModel_Form$bootstrapped_weights</code></pre>
+<p>Si alguno de los coeficientes muestra la inclusión del cero en el
+intervalo de confianza, tendría que ser excluido del modelo (esto en un
+enfoque tradicional de regresión). Pero, para estar seguros de esa
+decisión, primero se evalúa que tan relevante es ese indicador.</p>
+<p>Para eso se realiza el último análisis, Se evalúa la importancia
+absoluta de los indicadores, examinando las cargas de cada indicador
+formativo. Estas ya están almacenadas en el objeto de resumen.</p>
+<p>En ese resultado se revisan dos cosas: 1) que el intervalo de
+confianza (dos últimas columnas) del indicador no incluya el cero. Pero,
+si alguno incluye el cero entonces: a) si el indicador no salió bien en
+el análisis previo, entonces se debe retirar el indicador. b) si el
+indicador salió bien, entonces se mantiene el indicador pero la
+importancia no es alta 2) la carga del indicador (primera columna), así:
+a) si el indicador no salió bien en el análisis previo, su carga debe
+ser mayor o igual a 0,50. b) si el indicador salió bien, entonces su
+carga indica la contribución relativa que hace el indicador a la
+dimensión/constructo. Entre más alta, significa que aporta más para la
+medición de la dimensión/constructo.</p>
+<p>Para el ejemplo, el código para observar la relevancia del indicador
+formativo es:</p>
+<pre class="r"><code>summary_boot_CapsModel_Form$bootstrapped_loadings</code></pre>
 </div>
-<div id="ci" class="section level1">
-<h1>CI</h1>
-<p>CI_redundancy_mm &lt;- constructs( composite(“Cap_tics_form”,
-multi_items(item_name = “CI”, item_numbers = 1:6), weights = mode_B),
-composite(“Cap_tics_glob”, single_item(“CI_G”)) )</p>
-<p>CI_redundancy_sm &lt;- relationships( paths(from =
-c(“Cap_tics_form”), to = c(“Cap_tics_glob”)) )</p>
-<p>CI_redundancy_plsmodel &lt;- estimate_pls(data =
-capacidades_organizacionales, measurement_model = CI_redundancy_mm,
-structural_model = CI_redundancy_sm, missing = mean_replacement,
-missing_value = “-99”)</p>
-<p>sum_CI_redundancy_model &lt;- summary(CI_redundancy_plsmodel)
-sum_CI_redundancy_model</p>
-<p>sum_CI_redundancy_model<span class="math inline">\(reliability
-sum_CI_redundancy_model\)</span>paths</p>
+<div id="section" class="section level3">
+<h3>—–</h3>
 </div>
-<div id="cg" class="section level1">
-<h1>CG</h1>
-<p>CG_redundancy_mm &lt;- constructs( composite(“Cap_gestion_form”,
-multi_items(item_name = “CG”, item_numbers = 1:8), weights = mode_B),
-composite(“Cap_gestion_glob”, single_item(“CG_G”)) )</p>
-<p>CG_redundancy_sm &lt;- relationships( paths(from =
-c(“Cap_gestion_form”), to = c(“Cap_gestion_glob”)) )</p>
-<p>CG_redundancy_plsmodel &lt;- estimate_pls(data =
-capacidades_organizacionales, measurement_model = CG_redundancy_mm,
-structural_model = CG_redundancy_sm, missing = mean_replacement,
-missing_value = “-99”)</p>
-<p>sum_CG_redundancy_model &lt;- summary(CG_redundancy_plsmodel)
-sum_CG_redundancy_model</p>
-<p>sum_CG_redundancy_model<span class="math inline">\(reliability
-sum_CG_redundancy_model\)</span>paths</p>
-</div>
-<div id="cn" class="section level1">
-<h1>CN</h1>
-<p>CN_redundancy_mm &lt;- constructs( composite(“Cap_innovacion_form”,
-multi_items(item_name = “CN”, item_numbers = 1:7), weights = mode_B),
-composite(“Cap_innovacion_glob”, single_item(“CN_G”)) )</p>
-<p>CN_redundancy_sm &lt;- relationships( paths(from =
-c(“Cap_innovacion_form”), to = c(“Cap_innovacion_glob”)) )</p>
-<p>CN_redundancy_plsmodel &lt;- estimate_pls(data =
-capacidades_organizacionales, measurement_model = CN_redundancy_mm,
-structural_model = CN_redundancy_sm, missing = mean_replacement,
-missing_value = “-99”)</p>
-<p>sum_CN_redundancy_model &lt;- summary(CN_redundancy_plsmodel)
-sum_CN_redundancy_model</p>
-<p>sum_CN_redundancy_model<span class="math inline">\(reliability
-sum_CN_redundancy_model\)</span>paths</p>
-<p>#Análisis de colinealidad summary_CapsModel_Form<span class="math inline">\(validity\)</span>vif_items</p>
+<div id="cierre" class="section level3">
+<h3>CIERRE</h3>
+<p>Aquí se ha mostrado las pruebas y procedimiento que se debe seguir
+para evaluar la confiabilidad y validez de un instrumento de medición
+tanto reflectivo como formativo.</p>
+<p>Inclusive, si su instrumento tiene dos
+dimensiones/constructos/variables cada una de ellas medidas de forma
+diferente (una reflectiva, una formativa), usted debe aplicar las
+pruebas correspondientes, pues el error en la selección del test lo
+llevará a resultados errados.</p>
+<p>Espero este ejercicio sea de utilidad para sus trabajos. Otras
+consultas puede remitirlas al correo <a href="mailto:diegobaezp@gmail.com" class="email">diegobaezp@gmail.com</a></p>
+<p>Gracias.</p>
 </div>
 
 
